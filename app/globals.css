@@ -1,0 +1,179 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+
+@layer base {
+  :root {
+    --color-primary: #000615;
+    --color-primary-container: #0b1f3a;
+    --color-accent-rust: #8c3f2e;
+    --color-surface-offwhite: #f9f8f6;
+    --color-surface-low: #f6f3f2;
+    --color-surface-container: #f0eded;
+    --color-surface-high: #eae7e7;
+    --color-border-subtle: #e2dfd8;
+    --color-secondary: #5e5e5c;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #fcf9f8;
+    color: #1c1b1b;
+    font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f6f3f2;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #dcd9d9;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a87e59;
+  }
+}
+
+@theme {
+  --font-lora: "Lora", serif;
+}
+
+.font-serif {
+  font-family: 'Lora', Georgia, serif;
+}
+
+.font-sans {
+  font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-primary: #000615;
+  --color-primary-container: #0b1f3a;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #7587a7;
+  
+  --color-secondary: #5e5e5c;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e1dfdc;
+  
+  --color-surface: #fcf9f8;
+  --color-surface-dim: #dcd9d9;
+  --color-surface-bright: #fcf9f8;
+  --color-surface-offwhite: #F9F8F6;
+  --color-surface-container: #f0eded;
+  --color-surface-container-low: #f6f3f2;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #eae7e7;
+  --color-surface-container-highest: #e5e2e1;
+  --color-surface-variant: #e5e2e1;
+  
+  --color-on-surface: #1c1b1b;
+  --color-on-surface-variant: #44474d;
+  
+  --color-border-subtle: #E2DFD8;
+  --color-accent-rust: #8C3F2E;
+  --color-outline: #75777e;
+  --color-outline-variant: #c4c6ce;
+
+  --spacing-margin: 3rem;
+  --spacing-gutter: 2rem;
+  --spacing-space-xs: 0.5rem;
+  --spacing-space-sm: 1rem;
+  --spacing-space-md: 2rem;
+  --spacing-space-lg: 4rem;
+  --spacing-space-xl: 6rem;
+}
+
+@layer utilities {
+  .font-headline-xl {
+    font-family: var(--font-serif);
+    font-size: 56px;
+    line-height: 64px;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+  .font-headline-lg {
+    font-family: var(--font-serif);
+    font-size: 40px;
+    line-height: 48px;
+    letter-spacing: -0.01em;
+    font-weight: 400;
+  }
+  .font-headline-md {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 400;
+  }
+  .font-headline-sm {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 500;
+  }
+  .font-body-lg {
+    font-family: var(--font-sans);
+    font-size: 18px;
+    line-height: 30px;
+    font-weight: 300;
+  }
+  .font-body-md {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 24px;
+    font-weight: 400;
+  }
+  .font-body-sm {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 400;
+  }
+  .font-label-md {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+
+  .px-margin {
+    padding-left: clamp(1rem, 3vw, 3rem);
+    padding-right: clamp(1rem, 3vw, 3rem);
+  }
+}
+
+/* Material symbols styling */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  vertical-align: middle;
+}

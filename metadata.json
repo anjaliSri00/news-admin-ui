@@ -1,0 +1,6 @@
+{
+  "name": "FORM & FIELD — Editorial CMS",
+  "description": "Editorial CMS & Architecture Dispatch broadsheet dashboard for curatorial intelligence, monograph circulation, and publication workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
