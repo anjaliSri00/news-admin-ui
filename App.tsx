@@ -40,6 +40,7 @@ import { toast } from 'react-toastify';
 import { Sidebar } from './components/Sidebar';
 import { Subheader } from './components/Subheader';
 import { LatestNewsManager } from './components/screens/LatestNewsManager';
+import { NewsManager } from './components/screens/NewsManager';
 
 
 interface DeletingItem {
@@ -59,6 +60,7 @@ const {data:session} = useSession();
   const [isDecorModalOpen, setIsDecorModalOpen] = useState(false);
   const [isTrendModalOpen, setIsTrendModalOpen] = useState(false);
   const [isLatestNewsModalOpen,setIsLatestNewsModalOpen] = useState(false);
+  const [isReportsModalOpen,setIsReportsModalOpen] = useState(false);
 
   const [monographs, setMonographs] = useState<Monograph[]>(INITIAL_MONOGRAPHS);
   const [categories, setCategories] = useState<CuratedCategory[]>(CURATED_CATEGORIES);
@@ -527,7 +529,10 @@ const handleDeleteTrending = async (id: string) => {
         break;
       case 'latest-news':
         setIsLatestNewsModalOpen(true);
-        break;  
+        break; 
+      case 'special-reports':
+        setIsReportsModalOpen(true);
+        break;   
       case 'designers':
         // setIsDesignerModalOpen(true);
         alert("Designers create modal will open");
@@ -761,7 +766,7 @@ const handleDeleteEvent = async (id: string) => {
       {/* Main Content Area */}
       {/* <main className="w-full pt-32 flex-1"> */}
  <div className="flex-1 ml-64 flex flex-col min-h-screen">
-   <Subheader
+        <Subheader
           activeTab={activeTab}
           onGlobalAdd={handleGlobalAdd}
           searchQuery={searchQuery}
@@ -800,21 +805,26 @@ const handleDeleteEvent = async (id: string) => {
             setIsModalOpen={setIsDecorModalOpen}
           />
         )}
-      {activeTab === 'trending-stories' && (
-  <TrendsManager
-    isModalOpen={isTrendModalOpen}
-    setIsModalOpen={setIsTrendModalOpen}
-    // stories={trendingStories}
-    // onCreate={handleCreateTrending}
-    // onUpdate={handleUpdateTrending}
-    // onDelete={handleDeleteTrending}
-    // onToggleActive={handleToggleTrending}
-  />
-)}
+ {activeTab === 'trending-stories' && (
+          <NewsManager
+            isModalOpen={isTrendModalOpen}
+            setIsModalOpen={setIsTrendModalOpen}
+            defaultTab="trending" 
+          />
+        )}
+
 {activeTab === 'latest-news' && (
-  <LatestNewsManager
+  <NewsManager
   isModalOpen= {isLatestNewsModalOpen}
   setIsModalOpen = {setIsLatestNewsModalOpen}
+  defaultTab="latest" 
+  />
+)}
+{activeTab === 'special-reports' && (
+  <NewsManager
+  isModalOpen= {isReportsModalOpen}
+  setIsModalOpen = {setIsReportsModalOpen}
+  defaultTab="special" 
   />
 )}
 
@@ -822,8 +832,8 @@ const handleDeleteEvent = async (id: string) => {
   <EventsManager
     events={events}
     onCreate={handleCreateEvent}
-    onUpdate={handleUpdateEvent} // Signature: (id, data) => void
-    onStatusChange={handleUpdateEventStatus} // Signature: (id, status) => void
+    onUpdate={handleUpdateEvent} 
+    onStatusChange={handleUpdateEventStatus}
     onDelete={handleDeleteEvent}
     onFetchSingle={fetchSingleEvent}
     isModalOpen={isEventModalOpen}

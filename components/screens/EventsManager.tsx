@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BackendEventPayload } from '../../types/editorial';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
+import fetchApiResponse from '@/helper/api_data_store';
+import { useSession } from 'next-auth/react';
 
 interface EventsManagerProps {
   events: BackendEventPayload[];
@@ -112,8 +114,49 @@ export const EventsManager: React.FC<EventsManagerProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // UI state for Modal
-  // const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { data: session } = useSession();
+  const EVENTS_API = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/internal-dashboard/events`;
+
+  // 👇 Naya Local State for list
+  const [eventsList, setEventsList] = useState<BackendEventPayload[]>([]);
+  const [isLoadingList, setIsLoadingList] = useState(true);
+
+  // 👇 Fetch API Function
+  const fetchEventsList = async () => {
+    setIsLoadingList(true);
+    try {
+      const response = await fetchApiResponse<{ events: BackendEventPayload[] }>(
+        EVENTS_API,
+        {
+          method: 'GET',
+          headers: {
+            'Access-Token': session?.accessToken || '',
+            'Refresh-Token': session?.refreshToken || '',
+          },
+        }
+      );
+
+      // API Response format ke hisaab se
+      if (response.meta?.status === 200) {
+        if (response.data?.events) {
+          setEventsList(response.data.events);
+        } else if (Array.isArray(response.data)) {
+          setEventsList(response.data);
+        }
+      }
+    } catch (err) {
+      console.error('Fetch events failed:', err);
+      toast.error("Failed to load events");
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  // 👇 Initial Load
+  useEffect(() => {
+    fetchEventsList();
+  }, [session]);
 
   const handleEditClick = (event: BackendEventPayload) => {
     setEditingId(event.id!);
@@ -226,7 +269,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
       <div className="col-span-2 text-right">Actions</div>
     </div>
 
-    {events.length === 0 && (
+    {eventsList.length === 0 && (
       <div className="p-16 text-center text-secondary text-[14px]">
         <p className="font-serif text-[18px] text-primary mb-2">No events found</p>
         <p>Click the "Add Event" button in the header to create your first event.</p>
@@ -235,7 +278,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
 
     {/* Table Body */}
     <div className="divide-y divide-border-subtle">
-      {events.map((event, index) => (
+      {eventsList.map((event, index) => (
         <div 
           key={event.id} 
           className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-6 py-5 hover:bg-surface-offwhite transition-colors group"

@@ -128,18 +128,17 @@ export interface MeApiResponse {
 
 
 export interface NewsItemPayload {
-  id: string;
+  // id?: string;
   title: string;
   excerpt: string;
-  category: string; // e.g. "URBAN LIVING / TOKYO"
-  featured_image: string;
-  date: string; // e.g. "14 Oct 2026"
-  time?: string; // e.g. "08:45 GMT"
-  author?: string; // Only for featured article
-  read_time?: string; // Only for featured article
-  article_url?: string;
-  is_featured: boolean; // If true, it goes to the left side
+  content?: string;
+  category: string[]; // Array as per backend validation
+  news_type: 'latest' | 'trending' | 'special';
+  featured_image_url: string;
+  read_time: number;
   status: 'draft' | 'published';
+  layout_type: 'card' | 'featured' | 'compact';
+  is_active: boolean;
 }
 
 
