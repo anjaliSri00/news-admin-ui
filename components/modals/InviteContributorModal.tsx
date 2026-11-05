@@ -1,70 +1,99 @@
-import React, { useState } from 'react';
-import { Contributor } from '../../types/editorial';
+import { DesignerPayload } from "@/helper/designers";
+import React, { useState } from "react";
 
 interface InviteContributorModalProps {
   isOpen: boolean;
+  isSubmitting?: boolean;
   onClose: () => void;
-  onInvite: (contributor: Contributor) => void;
+  onInvite: (designer: DesignerPayload) => Promise<void> | void;
 }
 
 export const InviteContributorModal: React.FC<InviteContributorModalProps> = ({
   isOpen,
+  isSubmitting = false,
   onClose,
   onInvite,
 }) => {
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('Architectural Theorist & Contributing Fellow');
-  const [desk, setDesk] = useState('Venice Bureau');
-  const [location, setLocation] = useState('Venice, Italy');
-  const [specialty, setSpecialty] = useState('Lagoon Ecology & Amphibious Urbanism');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [bio, setBio] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [specialization, setSpecialization] = useState("");
+  const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [featuredImageUrl, setFeaturedImageUrl] = useState("");
+  const [readTime, setReadTime] = useState("");
+  const [layoutType, setLayoutType] = useState("");
+  const [error, setError] = useState("");
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    setError("");
 
-    const initials = name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
+    if (!name.trim()) {
+      setError("Designer name is required.");
+      return;
+    }
 
-    const newContributor: Contributor = {
-      id: `cont-${Date.now()}`,
-      name,
-      initials: initials || 'CO',
-      role,
-      desk,
-      location,
-      activeAssignments: 1,
-      totalMonographs: 0,
-      specialty,
-      recentPiece: 'Commissioning Proposal in Staging',
-      status: 'Contributing Fellow',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    const payload: DesignerPayload = {
+      name: name.trim(),
+      ...(email.trim() && { email: email.trim() }),
+      ...(excerpt.trim() && { excerpt: excerpt.trim() }),
+      ...(bio.trim() && { bio: bio.trim() }),
+      ...(city.trim() && { city: city.trim() }),
+      ...(country.trim() && { country: country.trim() }),
+      ...(specialization.trim() && {
+        specialization: specialization.trim(),
+      }),
+      ...(portfolioUrl.trim() && {
+        portfolio_url: portfolioUrl.trim(),
+      }),
+      ...(avatarUrl.trim() && { avatar_url: avatarUrl.trim() }),
+      ...(featuredImageUrl.trim() && {
+        featured_image_url: featuredImageUrl.trim(),
+      }),
+      ...(readTime.trim() && { read_time: readTime.trim() }),
+      ...(layoutType.trim() && { layout_type: layoutType.trim() }),
     };
 
-    onInvite(newContributor);
-    onClose();
+    try {
+      await onInvite(payload);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to create designer."
+      );
+    }
   };
+
+  const inputClass =
+    "w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] font-sans text-[14px] text-[#1c1b1b] focus:outline-none focus:border-[#0b1f3a]";
+
+  const labelClass =
+    "block font-sans text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-[#ffffff] border border-[#E2DFD8] w-full max-w-lg p-6 shadow-2xl">
+      <div className="bg-white border border-[#E2DFD8] w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
         <div className="flex items-start justify-between pb-4 border-b border-[#E2DFD8]">
           <div>
             <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8C3F2E]">
-              Contributor Network
+              Designer Management
             </span>
             <h3 className="font-serif text-[22px] text-[#000615] mt-1">
-              Commission International Theorist
+              Add Designer
             </h3>
           </div>
+
           <button
+            type="button"
             onClick={onClose}
-            className="text-[#5e5e5c] hover:text-[#000615] text-[22px] leading-none cursor-pointer"
+            disabled={isSubmitting}
+            className="text-[#5e5e5c] hover:text-[#000615] text-[22px] leading-none cursor-pointer disabled:opacity-50"
+            aria-label="Close modal"
           >
             ×
           </button>
@@ -72,81 +101,164 @@ export const InviteContributorModal: React.FC<InviteContributorModalProps> = ({
 
         <form onSubmit={handleSubmit} className="py-6 space-y-4">
           <div>
-            <label className="block font-sans text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-              Full Name *
-            </label>
+            <label className={labelClass}>Full Name *</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Prof. Carlo Scarpa Jr."
-              className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] font-sans text-[14px] text-[#1c1b1b] focus:outline-none focus:border-[#0b1f3a]"
+              placeholder="Enter designer name"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block font-sans text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-              Curatorial Role
-            </label>
+            <label className={labelClass}>Email</label>
             <input
-              type="text"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] font-sans text-[13px] text-[#1c1b1b]"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email address"
+              className={inputClass}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Specialization</label>
+            <input
+              type="text"
+              value={specialization}
+              onChange={(e) => setSpecialization(e.target.value)}
+              placeholder="Enter specialization"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-sans text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-                Desk Station
-              </label>
+              <label className={labelClass}>City</label>
               <input
                 type="text"
-                value={desk}
-                onChange={(e) => setDesk(e.target.value)}
-                className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] font-sans text-[13px] text-[#1c1b1b]"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Enter city"
+                className={inputClass}
               />
             </div>
+
             <div>
-              <label className="block font-sans text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-                Base City
-              </label>
+              <label className={labelClass}>Country</label>
               <input
                 type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] font-sans text-[13px] text-[#1c1b1b]"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder="Enter country"
+                className={inputClass}
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-sans text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-              Thematic Specialty
-            </label>
-            <input
-              type="text"
-              value={specialty}
-              onChange={(e) => setSpecialty(e.target.value)}
-              className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] font-sans text-[13px] text-[#1c1b1b]"
+            <label className={labelClass}>Excerpt</label>
+            <textarea
+              rows={2}
+              value={excerpt}
+              onChange={(e) => setExcerpt(e.target.value)}
+              placeholder="Short designer introduction"
+              className={inputClass}
             />
           </div>
+
+          <div>
+            <label className={labelClass}>Biography</label>
+            <textarea
+              rows={4}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Enter designer biography"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Portfolio URL</label>
+            <input
+              type="url"
+              value={portfolioUrl}
+              onChange={(e) => setPortfolioUrl(e.target.value)}
+              placeholder="https://..."
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Avatar Image URL</label>
+            <input
+              type="url"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              placeholder="https://..."
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Featured Image URL</label>
+            <input
+              type="url"
+              value={featuredImageUrl}
+              onChange={(e) => setFeaturedImageUrl(e.target.value)}
+              placeholder="https://..."
+              className={inputClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Read Time</label>
+              <input
+                type="text"
+                value={readTime}
+                onChange={(e) => setReadTime(e.target.value)}
+                placeholder="Enter read time"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Layout Type</label>
+              <input
+                type="text"
+                value={layoutType}
+                onChange={(e) => setLayoutType(e.target.value)}
+                placeholder="Enter layout type"
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {error && (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
 
           <div className="pt-4 border-t border-[#E2DFD8] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-[#E2DFD8] font-sans text-[13px] text-[#5e5e5c] hover:text-[#000615] cursor-pointer"
+              disabled={isSubmitting}
+              className="px-4 py-2 border border-[#E2DFD8] font-sans text-[13px] text-[#5e5e5c] hover:text-[#000615] disabled:opacity-50"
             >
               Cancel
             </button>
+
             <button
               type="submit"
-              className="px-5 py-2.5 bg-[#0b1f3a] text-white font-sans text-[13px] uppercase tracking-wider font-semibold hover:bg-[#8C3F2E] transition-colors cursor-pointer"
+              disabled={isSubmitting}
+              className="px-5 py-2.5 bg-[#0b1f3a] text-white font-sans text-[13px] uppercase tracking-wider font-semibold hover:bg-[#8C3F2E] disabled:opacity-50"
             >
-              Send Commissioning Invitation
+              {isSubmitting ? "Saving..." : "Create Designer"}
             </button>
           </div>
         </form>

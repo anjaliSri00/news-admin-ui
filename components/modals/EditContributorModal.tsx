@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Contributor } from '../../types/editorial';
+
+import { Designer, DesignerPayload } from '@/helper/designers';
+import React, { useEffect, useState } from 'react';
 
 interface EditContributorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  contributor: Contributor | null;
-  onSave: (updated: Contributor) => void;
+  contributor: Designer | null;
+  onSave: (updated: Designer, payload: DesignerPayload) => Promise<void>;
 }
 
 export const EditContributorModal: React.FC<EditContributorModalProps> = ({
@@ -15,82 +16,153 @@ export const EditContributorModal: React.FC<EditContributorModalProps> = ({
   onSave,
 }) => {
   const [name, setName] = useState('');
-  const [role, setRole] = useState('');
-  const [desk, setDesk] = useState('');
-  const [location, setLocation] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [recentPiece, setRecentPiece] = useState('');
-  const [status, setStatus] = useState<'Active' | 'Contributing Fellow' | 'On Assignment'>('Active');
-  const [activeAssignments, setActiveAssignments] = useState(1);
+  const [slug, setSlug] = useState('');
+  const [email, setEmail] = useState('');
+  const [excerpt, setExcerpt] = useState('');
+  const [bio, setBio] = useState('');
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
+  const [specialization, setSpecialization] = useState('');
+  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [readTime, setReadTime] = useState('');
+  const [layoutType, setLayoutType] = useState('');
+  const [status, setStatus] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (contributor) {
-      setName(contributor.name);
-      setRole(contributor.role);
-      setDesk(contributor.desk);
-      setLocation(contributor.location);
-      setSpecialty(contributor.specialty);
-      setRecentPiece(contributor.recentPiece);
-      setStatus(contributor.status);
-      setActiveAssignments(contributor.activeAssignments);
-    }
+    if (!contributor) return;
+
+    setName(contributor.name ?? '');
+    setSlug(contributor.slug ?? '');
+    setEmail(contributor.email ?? '');
+    setExcerpt(contributor.excerpt ?? '');
+    setBio(contributor.bio ?? '');
+    setCity(contributor.city ?? '');
+    setCountry(contributor.country ?? '');
+    setSpecialization(contributor.specialization ?? '');
+    setPortfolioUrl(contributor.portfolio_url ?? '');
+    setAvatarUrl(contributor.avatar_url ?? '');
+    setFeaturedImageUrl(contributor.featured_image_url ?? '');
+    setReadTime(
+      contributor.read_time !== undefined && contributor.read_time !== null
+        ? String(contributor.read_time)
+        : ''
+    );
+    setLayoutType(contributor.layout_type ?? '');
+    setStatus(contributor.status ?? '');
+    setIsActive(contributor.is_active ?? true);
+    setError('');
   }, [contributor, isOpen]);
 
   if (!isOpen || !contributor) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    setIsSaving(true);
-    const updated: Contributor = {
-      ...contributor,
-      name,
-      role,
-      desk,
-      location,
-      specialty,
-      recentPiece,
-      status,
-      activeAssignments: Number(activeAssignments),
-    };
+  if (!name.trim()) {
+    setError('Name is required.');
+    return;
+  }
 
-    try {
-      const res = await fetch('/api/contributors', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updated),
-      });
-      const data = await res.json();
-      if (data.contributor) {
-        onSave(data.contributor);
-      } else {
-        onSave(updated);
-      }
-    } catch {
-      onSave(updated);
-    } finally {
-      setIsSaving(false);
-      onClose();
-    }
+  if (!contributor) return;
+
+  setIsSaving(true);
+  setError('');
+
+  const currentValues: DesignerPayload = {
+    name: name.trim(),
+    slug: slug.trim() || null,
+    email: email.trim() || null,
+    excerpt: excerpt.trim() || null,
+    bio: bio.trim() || null,
+    city: city.trim() || null,
+    country: country.trim() || null,
+    specialization: specialization.trim() || null,
+    portfolio_url: portfolioUrl.trim() || null,
+    avatar_url: avatarUrl.trim() || null,
+    featured_image_url: featuredImageUrl.trim() || null,
+    read_time: readTime ? Number(readTime) : undefined,
+    layout_type: layoutType.trim() || undefined,
+    status: status || undefined,
+    is_active: isActive,
   };
+
+  const originalValues: DesignerPayload = {
+    name: contributor.name,
+    slug: contributor.slug ?? null,
+    email: contributor.email ?? null,
+    excerpt: contributor.excerpt ?? null,
+    bio: contributor.bio ?? null,
+    city: contributor.city ?? null,
+    country: contributor.country ?? null,
+    specialization: contributor.specialization ?? null,
+    portfolio_url: contributor.portfolio_url ?? null,
+    avatar_url: contributor.avatar_url ?? null,
+    featured_image_url: contributor.featured_image_url ?? null,
+    read_time: contributor.read_time ?? undefined,
+    layout_type: contributor.layout_type ?? undefined,
+    status: contributor.status ?? undefined,
+    is_active: contributor.is_active ?? true,
+  };
+
+  const payload: Partial<DesignerPayload> = {};
+
+  (Object.keys(currentValues) as (keyof DesignerPayload)[]).forEach((key) => {
+    if (currentValues[key] !== originalValues[key]) {
+      Object.assign(payload, { [key]: currentValues[key] });
+    }
+  });
+
+  if (Object.keys(payload).length === 0) {
+    onClose();
+    setIsSaving(false);
+    return;
+  }
+
+  try {
+    await onSave(
+      { ...contributor, ...payload },
+      payload as DesignerPayload
+    );
+    onClose();
+  } catch (err) {
+    console.error('Failed to update designer:', err);
+    setError(
+      err instanceof Error ? err.message : 'Failed to update designer.'
+    );
+  } finally {
+    setIsSaving(false);
+  }
+};
+
+  const inputClass =
+    'w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]';
+  const labelClass =
+    'block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-[#ffffff] border border-[#E2DFD8] w-full max-w-lg p-6 shadow-2xl">
+      <div className="bg-white border border-[#E2DFD8] w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
         <div className="flex items-start justify-between pb-4 border-b border-[#E2DFD8]">
           <div>
             <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8C3F2E]">
-              Theorist Registry
+              Designer Registry
             </span>
-            <h3 className="font-serif text-[22px] text-[#000615] mt-1 font-normal">
-              Edit Contributor Profile
+            <h3 className="font-serif text-[22px] text-[#000615] mt-1">
+              Edit Designer Profile
             </h3>
           </div>
+
           <button
+            type="button"
             onClick={onClose}
-            className="text-[#5e5e5c] hover:text-[#000615] text-[22px] leading-none cursor-pointer"
+            disabled={isSaving}
+            aria-label="Close modal"
+            className="text-[#5e5e5c] hover:text-[#000615] text-[22px] leading-none disabled:opacity-50"
           >
             ×
           </button>
@@ -98,124 +170,178 @@ export const EditContributorModal: React.FC<EditContributorModalProps> = ({
 
         <form onSubmit={handleSubmit} className="py-6 space-y-4 font-sans text-[13px]">
           <div>
-            <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-              Full Name *
-            </label>
+            <label className={labelClass}>Full Name *</label>
             <input
-              type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]"
+              className={inputClass}
             />
           </div>
 
-          <div>
-            <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-              Curatorial Role
-            </label>
-            <input
-              type="text"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-                Desk Bureau
-              </label>
+              <label className={labelClass}>Slug</label>
               <input
-                type="text"
-                value={desk}
-                onChange={(e) => setDesk(e.target.value)}
-                className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                className={inputClass}
               />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-                Base City / Country
-              </label>
+              <label className={labelClass}>Email</label>
               <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClass}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-              Thematic Specialty
-            </label>
+            <label className={labelClass}>Specialization</label>
             <input
-              type="text"
-              value={specialty}
-              onChange={(e) => setSpecialty(e.target.value)}
-              className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]"
+              value={specialization}
+              onChange={(e) => setSpecialization(e.target.value)}
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-              Recent Contribution / Monograph
-            </label>
-            <input
-              type="text"
-              value={recentPiece}
-              onChange={(e) => setRecentPiece(e.target.value)}
-              className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]"
+            <label className={labelClass}>Profile Summary / Excerpt</label>
+            <textarea
+              rows={2}
+              value={excerpt}
+              onChange={(e) => setExcerpt(e.target.value)}
+              className={inputClass}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Biography</label>
+            <textarea
+              rows={4}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-                Status
-              </label>
-              <select
-                value={status}
-                onChange={(e) =>
-                  setStatus(e.target.value as 'Active' | 'Contributing Fellow' | 'On Assignment')
-                }
-                className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]"
-              >
-                <option value="Active">Active</option>
-                <option value="On Assignment">On Assignment</option>
-                <option value="Contributing Fellow">Contributing Fellow</option>
-              </select>
+              <label className={labelClass}>City</label>
+              <input
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className={inputClass}
+              />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#5e5e5c] mb-1">
-                Active Assignments
-              </label>
+              <label className={labelClass}>Country</label>
+              <input
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Portfolio URL</label>
+            <input
+              type="url"
+              value={portfolioUrl}
+              onChange={(e) => setPortfolioUrl(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Avatar Image URL</label>
+            <input
+              type="url"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Featured Image URL</label>
+            <input
+              type="url"
+              value={featuredImageUrl}
+              onChange={(e) => setFeaturedImageUrl(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Read Time (minutes)</label>
               <input
                 type="number"
                 min={0}
-                value={activeAssignments}
-                onChange={(e) => setActiveAssignments(Number(e.target.value))}
-                className="w-full px-3.5 py-2 bg-[#F9F8F6] border border-[#E2DFD8] text-[#1c1b1b]"
+                value={readTime}
+                onChange={(e) => setReadTime(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Layout Type</label>
+              <input
+                value={layoutType}
+                onChange={(e) => setLayoutType(e.target.value)}
+                className={inputClass}
+                placeholder="Enter layout type"
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-[#E2DFD8] flex items-center justify-end gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Status</label>
+              <input
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className={inputClass}
+                placeholder="Enter status"
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-[#1c1b1b] self-center">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+              />
+              Active designer
+            </label>
+          </div>
+
+          {error && (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
+
+          <div className="pt-4 border-t border-[#E2DFD8] flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-[#E2DFD8] text-[13px] text-[#5e5e5c] hover:text-[#000615] cursor-pointer"
+              disabled={isSaving}
+              className="px-4 py-2 border border-[#E2DFD8] text-[#5e5e5c] disabled:opacity-50"
             >
               Cancel
             </button>
+
             <button
               type="submit"
               disabled={isSaving}
-              className="px-5 py-2.5 bg-[#0b1f3a] text-white text-[13px] uppercase tracking-wider font-semibold hover:bg-[#8C3F2E] transition-colors cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 bg-[#0b1f3a] text-white text-[13px] uppercase tracking-wider font-semibold hover:bg-[#8C3F2E] disabled:opacity-50"
             >
-              {isSaving ? 'Updating via API...' : 'Save Profile (API PUT)'}
+              {isSaving ? 'Updating...' : 'Save Designer'}
             </button>
           </div>
         </form>
@@ -223,3 +349,5 @@ export const EditContributorModal: React.FC<EditContributorModalProps> = ({
     </div>
   );
 };
+
+export default EditContributorModal;

@@ -36,7 +36,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'events-industry', label: 'Events & Industry' },
     { id: 'designers', label: 'Designers' },
     { id: 'design-tech', label: 'Design Tech' },
-    { id: 'furniture-products', label: 'Furniture & Products' },
+    { id: 'furniture', label: 'Furniture' },
+    { id: 'products', label: 'Products' },
     { id: 'showrooms-projects', label: 'Showrooms & Projects' },
     { id: 'editorial-desk', label: 'Editorial Desk' },
     { id: 'special-reports', label: 'Special Reports' },
@@ -67,7 +68,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       case 'events-industry': return 'Add Event';
       case 'trending-stories': return 'Add Story';
       case 'designers': return 'Add Designer';
-      case 'furniture-products': return 'New Monograph';
+      case 'furniture': return 'New Furniture';
+      case 'products': return 'New Products';
       default: return 'Create New';
     }
   };

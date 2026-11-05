@@ -40,20 +40,15 @@ function getChangedFields<T extends Record<string, any>>(
     const originalValue = original[key];
     const updatedValue = updated[key];
 
-    // Arrays (category) compare
     if (Array.isArray(originalValue) && Array.isArray(updatedValue)) {
       if (JSON.stringify(originalValue) !== JSON.stringify(updatedValue)) {
         diff[key] = updatedValue;
       }
-    }
-    // Objects compare
-    else if (typeof originalValue === "object" && originalValue !== null) {
+    } else if (typeof originalValue === "object" && originalValue !== null) {
       if (JSON.stringify(originalValue) !== JSON.stringify(updatedValue)) {
         diff[key] = updatedValue;
       }
-    }
-    // Simple values
-    else if (originalValue !== updatedValue) {
+    } else if (originalValue !== updatedValue) {
       diff[key] = updatedValue;
     }
   });
@@ -67,16 +62,17 @@ interface NewsManagerProps {
   defaultTab?: "latest" | "trending" | "special";
 }
 
+// 👇 emptyDraft me content khali kiya, taaki "Details coming soon" na aaye
 const emptyDraft: any = {
   title: "",
   excerpt: "",
-  content: "<p>Details coming soon.</p>",
-  category: ["home_decor"], // Array of categories
+  content: "", 
+  category: ["home_decor"],
   news_type: "latest",
   featured_image_url: "",
   read_time: 4,
   status: "draft",
-  layout_type: "card",
+  layout_type: "card", // Default layout
   is_active: true,
 };
 
@@ -96,14 +92,22 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<any>(emptyDraft);
-  const [selectedCategory, setSelectedCategory] = useState("home_decor"); // Single select
+  const [selectedCategory, setSelectedCategory] = useState("home_decor");
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
 
-  // Sync tab when prop changes
-  useEffect(() => {
-    setActiveTab(defaultTab);
-    setDraft((prev: any) => ({ ...prev, news_type: defaultTab }));
-  }, [defaultTab]);
+  // useEffect(() => {
+  //   setActiveTab(defaultTab);
+  //   setDraft((prev: any) => ({ ...prev, news_type: defaultTab }));
+  //   setSelectedCategory("home_decor");
+  //   setEditingId(null); 
+  // }, [defaultTab]);
+  
+useEffect(() => {
+    if (isModalOpen && !editingId) {
+      setDraft({ ...emptyDraft, news_type: activeTab });
+      setSelectedCategory("home_decor");
+    }
+  }, [isModalOpen, editingId, activeTab]);
 
   const fetchNews = async () => {
     setIsLoading(true);
@@ -155,12 +159,12 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
 
     setIsSubmitting(true);
 
-    // 1. Form se naya payload banao
     const newPayload = {
       ...draft,
       news_type: activeTab,
       category: [selectedCategory],
       read_time: Number(draft.read_time),
+      layout_type: draft.layout_type || "card", // Ensure layout_type is sent
     };
 
     try {
@@ -168,19 +172,15 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
       let method = "POST";
       let payloadToSend = newPayload;
 
-      // 2. Agar EDIT mode me hai
       if (editingId) {
         url = `${NEWS_API}/${editingId}`;
         method = "PUT";
 
-        // Original item dhundo
         const originalItem = items.find((i) => i.id === editingId);
 
         if (originalItem) {
-          // Sirf changed fields nikalo
           const changedData = getChangedFields(originalItem, newPayload);
 
-          // Agar kuch bhi change nahi hua
           if (Object.keys(changedData).length === 0) {
             toast.info("No changes made.");
             setIsModalOpen(false);
@@ -188,12 +188,10 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
             return;
           }
 
-          // Sirf changed data bhejo
           payloadToSend = changedData;
         }
       }
 
-      // 3. API Call
       const res = await fetchApiResponse(url, {
         method,
         headers: {
@@ -201,7 +199,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
           "Access-Token": session?.accessToken || "",
           "Refresh-Token": session?.refreshToken || "",
         },
-        body: JSON.stringify(payloadToSend), // 👈 Sirf changed data jayega
+        body: JSON.stringify(payloadToSend),
       });
 
       if (res.meta?.status === 200 || res.meta?.status === 201) {
@@ -253,7 +251,6 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
     setDeleteItemId(null);
   };
 
-  // Filter only 'latest' or 'special' based on tab
   const filteredItems = items.filter((item) => item.news_type === activeTab);
 
   if (isLoading)
@@ -265,7 +262,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
 
   return (
     <div className="w-full flex flex-col bg-[#fcf9f8] h-auto">
-      {/* GRID LIST (Simplified for brevity) */}
+      {/* GRID LIST */}
       <div className="px-6 mx-auto w-full">
         {filteredItems.length === 0 && (
           <div className="p-16 text-center border border-dashed border-gray-300 bg-white rounded-lg">
@@ -314,9 +311,6 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
                       handleToggleStatus(item.id, item.status);
                     }}
                     className="p-2.5 bg-white text-gray-800 rounded-full hover:bg-gray-100 hover:text-primary"
-                    title={
-                      item.status === "published" ? "Unpublish" : "Publish"
-                    }
                   >
                     {item.status === "published" ? (
                       <EyeOff className="w-4 h-4" />
@@ -344,7 +338,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
 
       {/* DELETE MODAL */}
       {deleteItemId && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-6 h-6" />
@@ -411,7 +405,6 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
                     <label className="block text-[12px] font-semibold text-gray-700 mb-1.5">
                       Category *
                     </label>
-                    {/* 👇 ALLOWED CATEGORIES DROPDOWN 👇 */}
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
@@ -442,6 +435,24 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
                   </div>
                 </div>
 
+                {/* 👇 LAYOUT TYPE DROPDOWN 👇 */}
+                <div>
+                  <label className="block text-[12px] font-semibold text-gray-700 mb-1.5">
+                    Layout Type
+                  </label>
+                  <select
+                    value={draft.layout_type || "card"} 
+                    onChange={(e) =>
+                      setDraft({ ...draft, layout_type: e.target.value })
+                    }
+                    className="w-full border rounded-md px-3 py-2 text-[13px]"
+                  >
+                    <option value="card">Standard Card</option>
+                    <option value="featured">Featured (Large)</option>
+                    <option value="compact">Compact (Small)</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-[12px] font-semibold text-gray-700 mb-1.5">
                     Image URL *
@@ -465,8 +476,24 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
                     onChange={(e) =>
                       setDraft({ ...draft, excerpt: e.target.value })
                     }
-                    rows={3}
+                    rows={2}
                     className="w-full border rounded-md px-3 py-2 text-[13px] resize-none"
+                  />
+                </div>
+
+                {/* 👇 CONTENT TEXTAREA ADD KIYA 👇 */}
+                <div>
+                  <label className="block text-[12px] font-semibold text-gray-700 mb-1.5">
+                    Content (HTML)
+                  </label>
+                  <textarea
+                    value={draft.content || ""}
+                    onChange={(e) =>
+                      setDraft({ ...draft, content: e.target.value })
+                    }
+                    rows={4}
+                    className="w-full border rounded-md px-3 py-2 text-[13px] font-mono resize-y"
+                    placeholder="<p>Write your actual article content here...</p>"
                   />
                 </div>
 

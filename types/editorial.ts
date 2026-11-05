@@ -6,7 +6,8 @@ export type NavTab =
   | 'events-industry' 
   | 'designers'
   | 'design-tech' 
-  | 'furniture-products' 
+  | 'furniture'
+  | 'products' 
   | 'showrooms-projects' 
   | 'editorial-desk' 
   | 'special-reports' 
@@ -211,5 +212,47 @@ export type UpdateEventPayload = Partial<Omit<BackendEventPayload, 'id' | 'code'
 export interface UpdateStatusPayload {
   status: 'draft' | 'published' | 'archived';
 }
+// Extra Checklist ke liye naya interface
+export interface DesignTechExtra {
+  checklistTitle?: string;
+  checklistDesc?: string;
+  checklistItems?: string[];
+  buttonText?: string;
+  buttonUrl?: string;
+}
 
+export interface DesignTechItem {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content?: string;
+  read_time: number;
+  category: string[];
+  featured_image_url: string | null;
+  layout_type: string;
+  status: 'draft' | 'published' | 'archived';
+  published_at: string | null;
+  
+  // 👇 Naya field add kiya
+  extra?: DesignTechExtra; 
+}
 
+export interface ProductPayload {
+  id?: string;
+  title: string;
+  slug?: string;
+  excerpt: string;
+  content?: string;
+  category: string[];
+  tags?: string[];
+  material?: string;
+  brand?: string;
+  designer?: string;
+  price_range?: string;
+  featured_image_url: string | null;
+  layout_type: string;
+  status: 'draft' | 'published' | 'archived';
+  is_active: boolean;
+  published_at?: string | null;
+}

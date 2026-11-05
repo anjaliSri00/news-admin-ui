@@ -33,13 +33,12 @@ export const HomeDecorManager: React.FC<HomeDecorManagerProps> = ({
   isModalOpen, 
   setIsModalOpen 
 }) => {
+  const [originalDraft, setOriginalDraft] =
+  useState<Omit<HomeDecorPayload, 'id'> | null>(null);
 
   const [decorItems, setDecorItems] = useState<HomeDecorPayload[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const {data:session} = useSession();
-
-  // Modal State
-  // const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // Form State
@@ -69,22 +68,17 @@ export const HomeDecorManager: React.FC<HomeDecorManagerProps> = ({
 
   useEffect(() => { fetchDecor(); }, []);
 
-  // Open Modal for Create
-  const handleOpenCreate = () => {
-    setEditingId(null);
-    setDraft(emptyDraft);
-    setTagsInput('');
-    setIsModalOpen(true);
-  };
-
   // Open Modal for Edit
-  const handleOpenEdit = (item: HomeDecorPayload) => {
-    setEditingId(item.id);
-    setDraft({ ...item });
-    setTagsInput(item.tags?.join(', ') || '');
-    setIsModalOpen(true);
-  };
+ const handleOpenEdit = (item: HomeDecorPayload) => {
+  setEditingId(item.id);
 
+  const { id, ...itemData } = item;
+
+  setDraft({ ...itemData });
+  setOriginalDraft({ ...itemData });
+  setTagsInput(item.tags?.join(', ') || '');
+  setIsModalOpen(true);
+};
    // Cancel Edit
   const handleCancel = () => {
     setIsModalOpen(false);
@@ -93,29 +87,118 @@ export const HomeDecorManager: React.FC<HomeDecorManagerProps> = ({
     setTagsInput('');
   };
 
+  const handleOpenCreate = () => {
+  setEditingId(null);
+  setDraft(emptyDraft);
+  setOriginalDraft(null);
+  setTagsInput('');
+  setIsModalOpen(true);
+};
+
   // Submit (Create or Update)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!draft.title.trim() || !draft.featured_image) return alert("Title & Image required!");
 
     setIsSubmitting(true);
+
+
+    const tagsArr = tagsInput
+  .split(',')
+  .map((tag) => tag.trim())
+  .filter(Boolean);
+
+const currentData = {
+  ...draft,
+  tags: tagsArr,
+};
+
+let payload: Record<string, unknown>;
+
+if (editingId && originalDraft) {
+  // Update: send only changed fields
+  payload = {};
+
+  const fieldsToCompare = [
+    'title',
+    'content',
+    'excerpt',
+    'featured_image',
+    'category',
+    'room_type',
+    'style',
+    'layout_type',
+    'is_active',
+    'status',
+    'article_url',
+  ] as const;
+
+  fieldsToCompare.forEach((field) => {
+    if (currentData[field] !== originalDraft[field]) {
+      payload[field] = currentData[field];
+    }
+  });
+
+  const originalTags = originalDraft.tags ?? [];
+
+  if (JSON.stringify(tagsArr) !== JSON.stringify(originalTags)) {
+    payload.tags = tagsArr;
+  }
+
+  // Compare SEO separately if your form edits SEO fields.
+  if (
+    JSON.stringify(currentData.seo) !==
+    JSON.stringify(originalDraft.seo)
+  ) {
+    payload.seo = currentData.seo;
+  }
+
+  if (Object.keys(payload).length === 0) {
+    alert('No changes detected.');
+    setIsSubmitting(false);
+    return;
+  }
+} else {
+  // Create: send all required fields
+  payload = {
+    title: currentData.title,
+    content: currentData.content,
+    excerpt: currentData.excerpt,
+    featured_image: currentData.featured_image,
+    category: currentData.category,
+    room_type: currentData.room_type,
+    style: currentData.style,
+    layout_type: currentData.layout_type,
+    is_active: currentData.is_active,
+    status: currentData.status,
+    tags: tagsArr,
+    seo: currentData.seo,
+    ...(currentData.article_url?.trim()
+      ? { article_url: currentData.article_url }
+      : {}),
+  };
+}
     
-    const payload: any = {
-      title: draft.title,
-      content: draft.content,
-      excerpt: draft.excerpt,
-      featured_image: draft.featured_image,
-      category: draft.category,
-      room_type: draft.room_type,
-      style: draft.style,
-      layout_type: draft.layout_type,
-      is_active: draft.is_active,
-      status: draft.status,
-    };
+    // const payload: any = {
+    //   title: draft.title,
+    //   content: draft.content,
+    //   excerpt: draft.excerpt,
+    //   featured_image: draft.featured_image,
+    //   category: draft.category,
+    //   room_type: draft.room_type,
+    //   style: draft.style,
+    //   layout_type: draft.layout_type,
+    //   is_active: draft.is_active,
+    //   status: draft.status,
+
+    // };
+
+
     
-    const tagsArr = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
-    if (tagsArr.length > 0) payload.tags = tagsArr;
-    if (draft.article_url?.trim()) payload.article_url = draft.article_url;
+    
+    // const tagsArr = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
+    // if (tagsArr.length > 0) payload.tags = tagsArr;
+    // if (draft.article_url?.trim()) payload.article_url = draft.article_url;
 
     try {
       const url = editingId ? `${HOME_DECOR_API}/${editingId}` : `${HOME_DECOR_API}/add`;
