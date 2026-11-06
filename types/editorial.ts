@@ -2,13 +2,14 @@ export type NavTab =
   | 'overview' 
   | 'home-decor'
   | 'trending-stories' 
+  | 'trend'
   | 'latest-news' 
   | 'events-industry' 
   | 'designers'
   | 'design-tech' 
   | 'furniture'
   | 'products' 
-  | 'showrooms-projects' 
+  | 'projects' 
   | 'editorial-desk' 
   | 'special-reports' 
   | 'podcast-video'
@@ -252,6 +253,54 @@ export interface ProductPayload {
   price_range?: string;
   featured_image_url: string | null;
   layout_type: string;
+  status: 'draft' | 'published' | 'archived';
+  is_active: boolean;
+  published_at?: string | null;
+}
+
+
+export interface TrendPayload {
+  id?: string;
+  title: string;
+  slug?: string;
+  excerpt: string;
+  content?: string;
+  category: string[];
+  tags?: string[];
+  trend_category?: string;
+  season?: string; 
+  year?: number;
+  confidence_level?: string; 
+  region?: string;
+  color?: string;
+  material?: string;
+  style?: string;
+  featured_image_url: string | null;
+  layout_type: string;
+  status: 'draft' | 'published' | 'archived';
+  is_active: boolean;
+  published_at?: string | null;
+  extra?: any;
+}
+
+
+export interface ProjectPayload {
+  id?: string;
+  title: string;
+  slug?: string;
+  excerpt: string;
+  content?: string;
+  category: string[];
+  tags?: string[];
+  project_type?: string; 
+  project_status?: string; 
+  city?: string;
+  country?: string;
+  architect?: string;
+  year?: number;
+  area?: number;
+  featured_image_url: string | null;
+  layout_type: string; // 'featured' or 'card'
   status: 'draft' | 'published' | 'archived';
   is_active: boolean;
   published_at?: string | null;

@@ -58,6 +58,7 @@ import {
 } from "./helper/designers";
 import { DesignTechManager } from "./components/screens/DesignTechManager";
 import { ProductsManager } from "./components/screens/ProductsManager";
+import { ProjectsManager } from "./components/screens/ProjectsManager";
 
 interface DeletingItem {
   type: "monograph" | "category" | "contributor" | "media";
@@ -75,11 +76,13 @@ export default function App() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isDecorModalOpen, setIsDecorModalOpen] = useState(false);
   const [isTrendModalOpen, setIsTrendModalOpen] = useState(false);
+  const [isTrendStoriesModalOpen, setIsTrendStoriesModalOpen] = useState(false);
   const [isLatestNewsModalOpen, setIsLatestNewsModalOpen] = useState(false);
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
   const [isDesignTechModalOpen, setIsDesignTechModalOpen] = useState(false);
-const [isFurnitureModalOpen, setIsFurnitureModalOpen] = useState(false);
-const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isprojectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [isFurnitureModalOpen, setIsFurnitureModalOpen] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [monographs, setMonographs] = useState<Monograph[]>(INITIAL_MONOGRAPHS);
   const [categories, setCategories] =
     useState<CuratedCategory[]>(CURATED_CATEGORIES);
@@ -555,8 +558,11 @@ const [isProductModalOpen, setIsProductModalOpen] = useState(false);
       case "home-decor":
         setIsDecorModalOpen(true);
         break;
-      case "trending-stories":
+      case "trend":
         setIsTrendModalOpen(true);
+        break;
+      case "trending-stories":
+        setIsTrendStoriesModalOpen(true);
         break;
       case "latest-news":
         setIsLatestNewsModalOpen(true);
@@ -571,13 +577,15 @@ const [isProductModalOpen, setIsProductModalOpen] = useState(false);
       case "design-tech":
         setIsDesignTechModalOpen(true);
         break;
-
+      case "projects":
+        setIsProjectModalOpen(true);
+        break;
       case "furniture":
         setIsFurnitureModalOpen(true);
         break;
-      case 'products':
-  setIsProductModalOpen(true);
-  break;  
+      case "products":
+        setIsProductModalOpen(true);
+        break;
       case "overview":
       case "editorial-desk":
         setIsNewMonographOpen(true); // Fallback to Monograph
@@ -818,7 +826,7 @@ const [isProductModalOpen, setIsProductModalOpen] = useState(false);
         activeTab={activeTab}
         onTabChange={(tab) => {
           setActiveTab(tab);
-          if (tab !== "showrooms-projects") {
+          if (tab !== "projects") {
             setCategoryFilterForMonographs(undefined);
           }
         }}
@@ -875,9 +883,15 @@ const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
           {activeTab === "trending-stories" && (
             <NewsManager
+              isModalOpen={isTrendStoriesModalOpen}
+              setIsModalOpen={setIsTrendStoriesModalOpen}
+              defaultTab="trending"
+            />
+          )}
+          {activeTab === "trend" && (
+            <TrendsManager
               isModalOpen={isTrendModalOpen}
               setIsModalOpen={setIsTrendModalOpen}
-              defaultTab="trending"
             />
           )}
 
@@ -910,7 +924,7 @@ const [isProductModalOpen, setIsProductModalOpen] = useState(false);
             />
           )}
 
-           {activeTab === "designers" && (
+          {activeTab === "designers" && (
             <ContributorsScreen
               contributors={contributors}
               isLoading={isLoading}
@@ -930,33 +944,26 @@ const [isProductModalOpen, setIsProductModalOpen] = useState(false);
           {activeTab === "settings" && <SettingsScreen />}
 
           {activeTab === "furniture" && (
-         <FurnitureManager
-    isModalOpen={isFurnitureModalOpen}
-    setIsModalOpen={setIsFurnitureModalOpen}
-  />
-          )}
-
-          {activeTab === "showrooms-projects" && (
-            <MediaScreen
-              mediaAssets={mediaAssets}
-              onOpenBatchUpload={() => setIsBatchUploadOpen(true)}
-              onDeleteMedia={(asset) =>
-                setDeletingItem({
-                  type: "media",
-                  id: asset.id,
-                  title: asset.title,
-                  description: `Photographer: ${asset.photographer} · ${asset.resolution}`,
-                })
-              }
+            <FurnitureManager
+              isModalOpen={isFurnitureModalOpen}
+              setIsModalOpen={setIsFurnitureModalOpen}
             />
           )}
-{activeTab === 'products' && (
-  <ProductsManager
-    isModalOpen={isProductModalOpen}
-    setIsModalOpen={setIsProductModalOpen}
+
+         {activeTab === 'projects' && (
+  <ProjectsManager
+    isModalOpen={isprojectModalOpen}
+    setIsModalOpen={setIsProjectModalOpen}
   />
 )}
-         
+
+          {activeTab === "products" && (
+            <ProductsManager
+              isModalOpen={isProductModalOpen}
+              setIsModalOpen={setIsProductModalOpen}
+            />
+          )}
+
           {activeTab === "editorial-desk" && (
             <PipelineScreen
               monographs={monographs}
